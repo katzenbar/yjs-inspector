@@ -4,8 +4,33 @@ import { Header } from "./components/site-header";
 import { ConfigPanel } from "./components/config-panel";
 import { PreviewPanel } from "./components/preview-panel";
 import * as Y from "yjs";
+import { useEffect, useRef } from "react";
+import { useConnection, useYDoc } from "./state";
+import { WebSocketConnectProvider } from "./providers/websocket";
 
 export function App() {
+  const [yDoc] = useYDoc();
+  const { connect } = useConnection();
+  const initializedProvider = useRef(false);
+
+  useEffect(() => {
+    if (initializedProvider.current) return;
+    initializedProvider.current = true;
+
+    const params = new URLSearchParams(document.location.search);
+    const initialUrl = params.get("url");
+    const initialRoom = params.get("room");
+
+    if (initialUrl && initialRoom) {
+      const provider = new WebSocketConnectProvider(
+        initialUrl,
+        initialRoom,
+        yDoc,
+      );
+      connect(provider);
+    }
+  }, [connect, yDoc]);
+
   return (
     <ThemeProvider>
       <div className="flex h-screen flex-col">
